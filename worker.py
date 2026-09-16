@@ -36,6 +36,14 @@ def request_parser(request):
 
 
 if __name__ == "__main__":
+    # Debug: print env vars
+    for v in ["WORKER_PORT", "CONTAINER_ID", "MASTER_TOKEN", "REPORT_ADDR",
+              "PUBLIC_IPADDR", "SERVERLESS", "USE_SSL", "BACKEND", "MODEL_LOG"]:
+        print(f"ENV {v}={os.environ.get(v, 'NOT SET')}", flush=True)
+    for k, val in os.environ.items():
+        if k.startswith("VAST_"):
+            print(f"ENV {k}={val}", flush=True)
+
     model_proc = start_model_server()
 
     LOG_FILE = os.environ.get("MODEL_LOG", "/var/log/model/server.log")
