@@ -1,4 +1,4 @@
-"""PyWorker — lightweight HTTP proxy that runs on port 3000, forwards to model server on 18000."""
+"""PyWorker — lightweight HTTP proxy that forwards requests to model server."""
 
 import os
 import subprocess
@@ -13,7 +13,6 @@ os.makedirs(LOG_DIR, exist_ok=True)
 
 
 def _report_error(msg):
-    """Report error to autoscaler (same as start_server.sh report_error_and_exit)."""
     try:
         container_id = int(os.environ.get("CONTAINER_ID", 0))
         master_token = os.environ.get("MASTER_TOKEN", "")
@@ -40,7 +39,24 @@ if __name__ == "__main__":
         sys.stderr.write("[worker.py] starting\n")
         sys.stderr.flush()
 
-        # Import and init
+        # Patch metrics.get_url() before importing vastai Worker
+        # The SDK expects VAST_TCP_PORT_{WORKER_PORT} and PUBLIC_IPADDR
+        # which are NOT set for serverless containers.
+        worker_port = os.environ.get("WORKER_PORT", "3000")
+        public_ip = os.environ.get("PUBLIC_IPADDR", "127.0.0.1")
+        use_ssl = os.environ.get("USE_SSL", "false") == "true"
+
+        # Set fallbacks so the SDK doesn't crash
+        tcp_port_key = f"VAST_TCP_PORT_{worker_port}"
+        if tcp_port_key not in os.environ:
+            os.environ[tcp_port_key] = worker_port
+        if "PUBLIC_IPADDR" not in os.environ:
+            os.environ["PUBLIC_IPADDR"] = public_ip
+
+        sys.stderr.write(f"[worker.py] ENV patch: {tcp_port_key}={os.environ[tcp_port_key]}, PUBLIC_IPADDR={os.environ['PUBLIC_IPADDR']}\n")
+        sys.stderr.flush()
+
+        # Now import vastai
         sys.stderr.write("[worker.py] importing vastai\n")
         sys.stderr.flush()
         from vastai import Worker, WorkerConfig, HandlerConfig, BenchmarkConfig, LogActionConfig
