@@ -1,0 +1,3 @@
+vastai
+fastapi
+uvicorn
