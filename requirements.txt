@@ -3,3 +3,4 @@ fastapi
 uvicorn
 nerfstudio
 gsplat
+nerfstudio<1.0
