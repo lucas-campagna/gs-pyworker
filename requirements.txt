@@ -1,6 +1,5 @@
 vastai
 fastapi
 uvicorn
-nerfstudio
-gsplat
 nerfstudio<1.0
+gsplat
